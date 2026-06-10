@@ -1,0 +1,12 @@
+{
+  "name": "e2e",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:filter": "node chrome-filter.test.mjs"
+  },
+  "devDependencies": {
+    "@dichroma/core": "workspace:*",
+    "pngjs": "^7.0.0"
+  }
+}

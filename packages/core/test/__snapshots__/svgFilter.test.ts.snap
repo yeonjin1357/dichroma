@@ -1,0 +1,53 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildSvgFilter snapshots > achromatopsia severity 0.5: dataUrl 1`] = `"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cfilter%20id%3D%22dichroma-achromatopsia-50%22%20color-interpolation-filters%3D%22linearRGB%22%3E%3CfeColorMatrix%20in%3D%22SourceGraphic%22%20type%3D%22matrix%22%20values%3D%220.6063%200.3576%200.0361%200%200%20%200.1063%200.8576%200.0361%200%200%20%200.1063%200.3576%200.5361%200%200%20%200%200%200%201%200%22%2F%3E%3C%2Ffilter%3E%3C%2Fsvg%3E#dichroma-achromatopsia-50"`;
+
+exports[`buildSvgFilter snapshots > achromatopsia severity 0.5: markup 1`] = `"<filter id="dichroma-achromatopsia-50" color-interpolation-filters="linearRGB"><feColorMatrix in="SourceGraphic" type="matrix" values="0.6063 0.3576 0.0361 0 0  0.1063 0.8576 0.0361 0 0  0.1063 0.3576 0.5361 0 0  0 0 0 1 0"/></filter>"`;
+
+exports[`buildSvgFilter snapshots > achromatopsia severity 1: dataUrl 1`] = `"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cfilter%20id%3D%22dichroma-achromatopsia-100%22%20color-interpolation-filters%3D%22linearRGB%22%3E%3CfeColorMatrix%20in%3D%22SourceGraphic%22%20type%3D%22matrix%22%20values%3D%220.2126%200.7152%200.0722%200%200%20%200.2126%200.7152%200.0722%200%200%20%200.2126%200.7152%200.0722%200%200%20%200%200%200%201%200%22%2F%3E%3C%2Ffilter%3E%3C%2Fsvg%3E#dichroma-achromatopsia-100"`;
+
+exports[`buildSvgFilter snapshots > achromatopsia severity 1: markup 1`] = `"<filter id="dichroma-achromatopsia-100" color-interpolation-filters="linearRGB"><feColorMatrix in="SourceGraphic" type="matrix" values="0.2126 0.7152 0.0722 0 0  0.2126 0.7152 0.0722 0 0  0.2126 0.7152 0.0722 0 0  0 0 0 1 0"/></filter>"`;
+
+exports[`buildSvgFilter snapshots > deutan severity 0.5: dataUrl 1`] = `"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cfilter%20id%3D%22dichroma-deutan-50%22%20color-interpolation-filters%3D%22linearRGB%22%3E%3CfeColorMatrix%20in%3D%22SourceGraphic%22%20type%3D%22matrix%22%20values%3D%220.54749%200.60776%20-0.15526%200%200%20%200.18169%200.78174%200.03657%200%200%20%20-0.01041%200.02728%200.98314%200%200%20%200%200%200%201%200%22%2F%3E%3C%2Ffilter%3E%3C%2Fsvg%3E#dichroma-deutan-50"`;
+
+exports[`buildSvgFilter snapshots > deutan severity 0.5: markup 1`] = `"<filter id="dichroma-deutan-50" color-interpolation-filters="linearRGB"><feColorMatrix in="SourceGraphic" type="matrix" values="0.54749 0.60776 -0.15526 0 0  0.18169 0.78174 0.03657 0 0  -0.01041 0.02728 0.98314 0 0  0 0 0 1 0"/></filter>"`;
+
+exports[`buildSvgFilter snapshots > deutan severity 1: dataUrl 1`] = `"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cfilter%20id%3D%22dichroma-deutan-100%22%20color-interpolation-filters%3D%22linearRGB%22%3E%3CfeColorMatrix%20in%3D%22SourceGraphic%22%20type%3D%22matrix%22%20values%3D%220.29275%200.70725%200%200%200%20%200.29275%200.70725%200%200%200%20%20-0.02234%200.02234%201%200%200%20%200%200%200%201%200%22%2F%3E%3C%2Ffilter%3E%3C%2Fsvg%3E#dichroma-deutan-100"`;
+
+exports[`buildSvgFilter snapshots > deutan severity 1: markup 1`] = `"<filter id="dichroma-deutan-100" color-interpolation-filters="linearRGB"><feColorMatrix in="SourceGraphic" type="matrix" values="0.29275 0.70725 0 0 0  0.29275 0.70725 0 0 0  -0.02234 0.02234 1 0 0  0 0 0 1 0"/></filter>"`;
+
+exports[`buildSvgFilter snapshots > protan severity 0.5: dataUrl 1`] = `"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cfilter%20id%3D%22dichroma-protan-50%22%20color-interpolation-filters%3D%22linearRGB%22%3E%3CfeColorMatrix%20in%3D%22SourceGraphic%22%20type%3D%22matrix%22%20values%3D%220.45806%200.67958%20-0.13764%200%200%20%200.09279%200.84631%200.0609%200%200%20%20-0.00749%20-0.01681%201.0243%200%200%20%200%200%200%201%200%22%2F%3E%3C%2Ffilter%3E%3C%2Fsvg%3E#dichroma-protan-50"`;
+
+exports[`buildSvgFilter snapshots > protan severity 0.5: markup 1`] = `"<filter id="dichroma-protan-50" color-interpolation-filters="linearRGB"><feColorMatrix in="SourceGraphic" type="matrix" values="0.45806 0.67958 -0.13764 0 0  0.09279 0.84631 0.0609 0 0  -0.00749 -0.01681 1.0243 0 0  0 0 0 1 0"/></filter>"`;
+
+exports[`buildSvgFilter snapshots > protan severity 1: dataUrl 1`] = `"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cfilter%20id%3D%22dichroma-protan-100%22%20color-interpolation-filters%3D%22linearRGB%22%3E%3CfeColorMatrix%20in%3D%22SourceGraphic%22%20type%3D%22matrix%22%20values%3D%220.11238%200.88762%200%200%200%20%200.11238%200.88762%200%200%200%20%200.00401%20-0.00401%201%200%200%20%200%200%200%201%200%22%2F%3E%3C%2Ffilter%3E%3C%2Fsvg%3E#dichroma-protan-100"`;
+
+exports[`buildSvgFilter snapshots > protan severity 1: markup 1`] = `"<filter id="dichroma-protan-100" color-interpolation-filters="linearRGB"><feColorMatrix in="SourceGraphic" type="matrix" values="0.11238 0.88762 0 0 0  0.11238 0.88762 0 0 0  0.00401 -0.00401 1 0 0  0 0 0 1 0"/></filter>"`;
+
+exports[`buildSvgFilter snapshots > tritan severity 0.5: dataUrl 1`] = `"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cfilter%20id%3D%22dichroma-tritan-50%22%20color-interpolation-filters%3D%22linearRGB%22%3E%0A%20%20%3CfeColorMatrix%20in%3D%22SourceGraphic%22%20type%3D%22matrix%22%20result%3D%22projA%22%20values%3D%221.00638%200.06774%20-0.07413%200%200%20%20-0.00622%200.93406%200.07215%200%200%20%200.03794%200.4025%200.55956%200%200%20%200%200%200%201%200%22%2F%3E%0A%20%20%3CfeColorMatrix%20in%3D%22SourceGraphic%22%20type%3D%22matrix%22%20result%3D%22projB%22%20values%3D%220.96839%200.09489%20-0.06328%200%200%20%200.03077%200.90763%200.0616%200%200%20%20-0.18781%200.56383%200.62398%200%200%20%200%200%200%201%200%22%2F%3E%0A%20%20%3CfeColorMatrix%20in%3D%22SourceGraphic%22%20type%3D%22matrix%22%20result%3D%22sep%22%20values%3D%220%200%200%200%200%20%200%200%200%200%200%20%200%200%200%200%200%20%203.901%20-2.788%20-1.113%200%200.5%22%2F%3E%0A%20%20%3CfeComponentTransfer%20in%3D%22sep%22%20result%3D%22mask%22%3E%3CfeFuncA%20type%3D%22discrete%22%20tableValues%3D%220%201%22%2F%3E%3C%2FfeComponentTransfer%3E%0A%20%20%3CfeComposite%20in%3D%22projA%22%20in2%3D%22mask%22%20operator%3D%22in%22%20result%3D%22maskedA%22%2F%3E%0A%20%20%3CfeComposite%20in%3D%22projB%22%20in2%3D%22mask%22%20operator%3D%22out%22%20result%3D%22maskedB%22%2F%3E%0A%20%20%3CfeComposite%20in%3D%22maskedA%22%20in2%3D%22maskedB%22%20operator%3D%22over%22%2F%3E%0A%3C%2Ffilter%3E%3C%2Fsvg%3E#dichroma-tritan-50"`;
+
+exports[`buildSvgFilter snapshots > tritan severity 0.5: markup 1`] = `
+"<filter id="dichroma-tritan-50" color-interpolation-filters="linearRGB">
+  <feColorMatrix in="SourceGraphic" type="matrix" result="projA" values="1.00638 0.06774 -0.07413 0 0  -0.00622 0.93406 0.07215 0 0  0.03794 0.4025 0.55956 0 0  0 0 0 1 0"/>
+  <feColorMatrix in="SourceGraphic" type="matrix" result="projB" values="0.96839 0.09489 -0.06328 0 0  0.03077 0.90763 0.0616 0 0  -0.18781 0.56383 0.62398 0 0  0 0 0 1 0"/>
+  <feColorMatrix in="SourceGraphic" type="matrix" result="sep" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  3.901 -2.788 -1.113 0 0.5"/>
+  <feComponentTransfer in="sep" result="mask"><feFuncA type="discrete" tableValues="0 1"/></feComponentTransfer>
+  <feComposite in="projA" in2="mask" operator="in" result="maskedA"/>
+  <feComposite in="projB" in2="mask" operator="out" result="maskedB"/>
+  <feComposite in="maskedA" in2="maskedB" operator="over"/>
+</filter>"
+`;
+
+exports[`buildSvgFilter snapshots > tritan severity 1: dataUrl 1`] = `"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cfilter%20id%3D%22dichroma-tritan-100%22%20color-interpolation-filters%3D%22linearRGB%22%3E%0A%20%20%3CfeColorMatrix%20in%3D%22SourceGraphic%22%20type%3D%22matrix%22%20result%3D%22projA%22%20values%3D%221.01277%200.13548%20-0.14826%200%200%20%20-0.01243%200.86812%200.14431%200%200%20%200.07589%200.805%200.11911%200%200%20%200%200%200%201%200%22%2F%3E%0A%20%20%3CfeColorMatrix%20in%3D%22SourceGraphic%22%20type%3D%22matrix%22%20result%3D%22projB%22%20values%3D%220.93678%200.18979%20-0.12657%200%200%20%200.06154%200.81526%200.1232%200%200%20%20-0.37562%201.12767%200.24796%200%200%20%200%200%200%201%200%22%2F%3E%0A%20%20%3CfeColorMatrix%20in%3D%22SourceGraphic%22%20type%3D%22matrix%22%20result%3D%22sep%22%20values%3D%220%200%200%200%200%20%200%200%200%200%200%20%200%200%200%200%200%20%203.901%20-2.788%20-1.113%200%200.5%22%2F%3E%0A%20%20%3CfeComponentTransfer%20in%3D%22sep%22%20result%3D%22mask%22%3E%3CfeFuncA%20type%3D%22discrete%22%20tableValues%3D%220%201%22%2F%3E%3C%2FfeComponentTransfer%3E%0A%20%20%3CfeComposite%20in%3D%22projA%22%20in2%3D%22mask%22%20operator%3D%22in%22%20result%3D%22maskedA%22%2F%3E%0A%20%20%3CfeComposite%20in%3D%22projB%22%20in2%3D%22mask%22%20operator%3D%22out%22%20result%3D%22maskedB%22%2F%3E%0A%20%20%3CfeComposite%20in%3D%22maskedA%22%20in2%3D%22maskedB%22%20operator%3D%22over%22%2F%3E%0A%3C%2Ffilter%3E%3C%2Fsvg%3E#dichroma-tritan-100"`;
+
+exports[`buildSvgFilter snapshots > tritan severity 1: markup 1`] = `
+"<filter id="dichroma-tritan-100" color-interpolation-filters="linearRGB">
+  <feColorMatrix in="SourceGraphic" type="matrix" result="projA" values="1.01277 0.13548 -0.14826 0 0  -0.01243 0.86812 0.14431 0 0  0.07589 0.805 0.11911 0 0  0 0 0 1 0"/>
+  <feColorMatrix in="SourceGraphic" type="matrix" result="projB" values="0.93678 0.18979 -0.12657 0 0  0.06154 0.81526 0.1232 0 0  -0.37562 1.12767 0.24796 0 0  0 0 0 1 0"/>
+  <feColorMatrix in="SourceGraphic" type="matrix" result="sep" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  3.901 -2.788 -1.113 0 0.5"/>
+  <feComponentTransfer in="sep" result="mask"><feFuncA type="discrete" tableValues="0 1"/></feComponentTransfer>
+  <feComposite in="projA" in2="mask" operator="in" result="maskedA"/>
+  <feComposite in="projB" in2="mask" operator="out" result="maskedB"/>
+  <feComposite in="maskedA" in2="maskedB" operator="over"/>
+</filter>"
+`;

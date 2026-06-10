@@ -1,4 +1,6 @@
-// TODO(M1): replace with the real color-science API
-// (Viénot 1999 / Brettel 1997 / Machado 2009 CVD simulation,
-// SVG filter builder, WCAG contrast in simulated color space).
-export const CORE_PLACEHOLDER = true;
+export type { CvdType, Mat3, RGBTuple, SimModel, SvgFilter, Vec3 } from './types';
+export { LINEAR_LUT, linearToSrgb, srgbToLinear } from './srgb';
+export { resolveModel, simulateLinear } from './model';
+export { simulateColor, simulateImageData } from './simulate';
+export { buildSvgFilter } from './svgFilter';
+export { compositeOver, relativeLuminance, simulatedWcagRatio, wcagRatio } from './contrast';
