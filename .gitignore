@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.output/
+.wxt/
+coverage/
+tools/.venv/
+*.tsbuildinfo
+.env*
+*.log
