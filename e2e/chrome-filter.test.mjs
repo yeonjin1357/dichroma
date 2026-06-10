@@ -11,8 +11,16 @@ import { PNG } from 'pngjs';
 import { buildSvgFilter, simulateColor } from '@dichroma/core';
 
 const FALLBACK_CHROME = '/home/yeonjin/.cache/ms-playwright/chromium-1224/chrome-linux64/chrome';
-const chrome = process.env.CHROME_BIN ?? (existsSync(FALLBACK_CHROME) ? FALLBACK_CHROME : null);
-if (!chrome || !existsSync(chrome)) {
+// CHROME_BIN semantics: set-but-invalid is a hard error (a CI typo must not
+// silently skip the suite); empty string is treated as unset; skip only when
+// neither CHROME_BIN nor the fallback path exists.
+const envChrome = process.env.CHROME_BIN || null;
+if (envChrome && !existsSync(envChrome)) {
+  console.error(`ERROR: CHROME_BIN points to "${envChrome}" but no such file exists.`);
+  process.exit(1);
+}
+const chrome = envChrome ?? (existsSync(FALLBACK_CHROME) ? FALLBACK_CHROME : null);
+if (!chrome) {
   console.log('SKIP: no Chrome binary found (set CHROME_BIN or install playwright chromium).');
   process.exit(0);
 }

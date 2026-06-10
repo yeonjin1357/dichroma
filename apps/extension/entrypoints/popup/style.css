@@ -1,5 +1,93 @@
+/* Popup styling: WCAG AA — 4.5:1+ text contrast in both schemes, visible
+   focus indicators, no color-only state signaling. */
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --fg: #1c1c1c; /* 15.8:1 on --bg */
+  --border: #767676;
+  --focus: #1a56b8; /* 4.5:1+ on white */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1f1f1f;
+    --fg: #ececec; /* 13.6:1 on --bg */
+    --border: #8a8a8a;
+    --focus: #8ab4f8;
+  }
+}
+
 body {
   margin: 0;
-  min-width: 240px;
-  font-family: system-ui, sans-serif;
+  width: 360px;
+  background: var(--bg);
+  color: var(--fg);
+  font: 14px/1.5 system-ui, sans-serif;
+}
+
+main {
+  display: grid;
+  gap: 14px;
+  padding: 14px 16px 16px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+fieldset {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 12px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+legend {
+  padding: 0 4px;
+  font-weight: 600;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.severity {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.severity input[type='range'] {
+  width: 100%;
+}
+
+.severity input[type='range']:disabled {
+  opacity: 0.4;
+}
+
+.severity output {
+  min-width: 2.2em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.footnote {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--fg);
+  border-radius: 4px;
+  font-size: 13px;
 }

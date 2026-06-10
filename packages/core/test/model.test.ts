@@ -18,6 +18,12 @@ describe('resolveModel severity clamp', () => {
     const model = resolveModel('deutan', -3);
     expect(model).toEqual({ kind: 'matrix', matrix: IDENTITY });
   });
+
+  it('throws RangeError for non-finite severity', () => {
+    expect(() => resolveModel('deutan', NaN)).toThrow(RangeError);
+    expect(() => resolveModel('protan', Infinity)).toThrow(RangeError);
+    expect(() => resolveModel('tritan', -Infinity)).toThrow(RangeError);
+  });
 });
 
 describe('resolveModel routing', () => {

@@ -14,7 +14,7 @@ const golden: GoldenFile = JSON.parse(
 );
 
 const STEPS = golden.grid;
-const values = Array.from({ length: STEPS }, (_, i) => Math.round((i * 255) / 16));
+const values = Array.from({ length: STEPS }, (_, i) => Math.round((i * 255) / (STEPS - 1)));
 const grid: RGBTuple[] = [];
 for (const r of values) {
   for (const g of values) {

@@ -3,10 +3,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test:filter": "node chrome-filter.test.mjs"
+    "test:filter": "node chrome-filter.test.mjs",
+    "test:extension": "playwright test extension.spec.mjs"
   },
   "devDependencies": {
     "@dichroma/core": "workspace:*",
+    "@playwright/test": "^1.60.0",
     "pngjs": "^7.0.0"
   }
 }

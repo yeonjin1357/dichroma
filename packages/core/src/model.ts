@@ -39,6 +39,9 @@ function machadoMatrix(table: readonly Mat3[], severity: number): Mat3 {
  * an identity→luminance blend for achromatopsia.
  */
 export function resolveModel(type: CvdType, severity = 1): SimModel {
+  if (!Number.isFinite(severity)) {
+    throw new RangeError(`severity must be a finite number, got ${severity}`);
+  }
   const s = Math.min(1, Math.max(0, severity));
   switch (type) {
     case 'protan':
