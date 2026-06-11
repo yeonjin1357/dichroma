@@ -2,6 +2,11 @@
 
 [English](README.md) | **한국어**
 
+<img width="1280" height="800" alt="01-simulation-before-after" src="https://github.com/user-attachments/assets/f78e077e-0bf5-45fa-9e84-e6a9f1d46a27" />
+<img width="1280" height="800" alt="03-audit-panel" src="https://github.com/user-attachments/assets/d5dfa3fc-1bc8-4efd-ba5d-f19e52d4626a" />
+<img width="1280" height="800" alt="02-popup" src="https://github.com/user-attachments/assets/98a39dc3-77bf-429b-b2ee-9bceb8b52bee" />
+<img width="1280" height="800" alt="04-preview-card" src="https://github.com/user-attachments/assets/dfe095d4-d65e-441d-a92b-5560ad3412b6" />
+
 dichroma는 색각 이상(색맹·색약)을 시뮬레이션하고 대비를 검사하는 Chrome 확장
 프로그램이자 순수 TypeScript 색과학 라이브러리입니다. 과학적으로 정확한 색각 이상
 모델(Viénot 1999, Brettel 1997, Machado 2009)을 실제 페이지에 적용하고, **시뮬레이션된
