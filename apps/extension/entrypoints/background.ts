@@ -103,6 +103,10 @@ const auditInjector: AuditInjector = {
     const msg: AuditPageCommand = { kind: 'rerunAudit' };
     await browser.tabs.sendMessage(tabId, msg);
   },
+  async sendTeardown(tabId) {
+    const msg: AuditPageCommand = { kind: 'teardownAudit' };
+    await browser.tabs.sendMessage(tabId, msg);
+  },
 };
 
 export default defineBackground(() => {
@@ -134,6 +138,11 @@ export default defineBackground(() => {
   browser.commands.onCommand.addListener((command, tab) => {
     if (command === 'toggle-simulation') void controller.handleToggleCommand(tab);
   });
+
+  // Side-panel close detection: the sidePanel API fires no close event, so
+  // each panel holds a long-lived port and its disconnect is the close signal
+  // (full lifecycle notes on handlePanelConnect in audit-controller.ts).
+  browser.runtime.onConnect.addListener((port) => auditController.handlePanelConnect(port));
 
   browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
     void controller.handleTabUpdated(tabId, changeInfo);

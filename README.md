@@ -15,10 +15,17 @@ designers and developers see their work the way color-blind users do.
 ├── apps/
 │   └── extension/   # WXT + React Chrome extension
 ├── e2e/             # Playwright e2e tests (M1/M2)
+├── store-assets/    # Chrome Web Store icons, screenshots, listing copy (M5)
 └── tools/           # gen-golden.py golden-value generator (M1)
 ```
 
-## Try it
+## Install
+
+Get dichroma from the Chrome Web Store: `<CHROME_WEB_STORE_URL>`
+*(link lands here once the listing is approved — see
+`store-assets/SUBMISSION.md`)*.
+
+Or load it unpacked from source:
 
 ```sh
 pnpm install
@@ -41,7 +48,10 @@ Known limitations:
 - The contrast audit inspects the top-level frame only; iframe content is not
   audited.
 
-TODO: store icons are intentionally deferred.
+Extension icons live at `apps/extension/public/icon/{16,32,48,128}.png`,
+regenerated from the SVG sources in `store-assets/icons/`. Store listing
+copy, screenshots, and the submission runbook live under `store-assets/`
+(see `store-assets/README.md`); the privacy policy is [PRIVACY.md](PRIVACY.md).
 
 ## How the contrast audit works / accuracy
 
@@ -60,10 +70,8 @@ The contrast audit ships [axe-core](https://github.com/dequelabs/axe-core)
 unmodified as `vendor/axe.min.js`, with its license alongside as
 `vendor/LICENSE`. Both files are copied from the pinned npm package at build
 time; dichroma's own code is not derived from axe-core and only calls its
-public `axe.run` API.
-
-TODO: the Chrome Web Store listing description must repeat this axe-core
-attribution when the store submission is prepared.
+public `axe.run` API. The Chrome Web Store listing description repeats this
+attribution (see `store-assets/listing-en.md`).
 
 ## Development
 

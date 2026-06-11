@@ -27,11 +27,27 @@ export default defineConfig({
     },
   },
   manifest: ({ mode }) => ({
-    // 'dichroma' is a proper noun — never localized; the description resolves
-    // from public/_locales/{en,ko}/messages.json (en is the default).
+    // The Chrome Web Store takes the listing TITLE from this name and the
+    // SUMMARY from the description — neither is editable in the dashboard.
+    // The description resolves from public/_locales/{en,ko}/messages.json
+    // (en is the default). See store-assets/listing-en.md for the optional
+    // longer store title.
     name: 'dichroma',
     description: '__MSG_extDescription__',
     default_locale: 'en',
+    // WXT's icon discovery (public/icon/{size}.png) populates manifest.icons
+    // on its own, but NOT action.default_icon — declare that explicitly so
+    // the toolbar icon is pinned to the same set. WXT merges this with the
+    // popup-derived default_popup/default_title. Regenerate the PNGs with:
+    // node store-assets/icons/generate.mjs
+    action: {
+      default_icon: {
+        16: 'icon/16.png',
+        32: 'icon/32.png',
+        48: 'icon/48.png',
+        128: 'icon/128.png',
+      },
+    },
     // The sidepanel entrypoint makes WXT add the sidePanel permission and
     // side_panel.default_path on its own.
     permissions: ['activeTab', 'scripting', 'storage'],

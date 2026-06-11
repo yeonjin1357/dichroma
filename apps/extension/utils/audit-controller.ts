@@ -12,6 +12,24 @@ export interface AuditInjector {
   injectAudit(tabId: number): Promise<void>;
   /** tabs.sendMessage(tabId, { kind: 'rerunAudit' }). */
   sendRerun(tabId: number): Promise<void>;
+  /** tabs.sendMessage(tabId, { kind: 'teardownAudit' }). */
+  sendTeardown(tabId: number): Promise<void>;
+}
+
+/** Name of the long-lived port every side panel opens for close detection. */
+export const PANEL_PORT_NAME = 'dichroma-sidepanel';
+
+/**
+ * Minimal structural slice of chrome.runtime.Port that the close-detection
+ * logic touches. fake-browser (1.5.2) implements neither runtime.connect nor
+ * runtime.onConnect, so unit tests inject hand-rolled fakes through this
+ * interface (the project's established seam pattern); the real Port is
+ * structurally assignable.
+ */
+export interface PanelPort {
+  name: string;
+  onMessage: { addListener(cb: (msg: unknown) => void): void };
+  onDisconnect: { addListener(cb: () => void): void };
 }
 
 const auditKey = (tabId: number) => `audit:${tabId}`;
@@ -138,5 +156,54 @@ export function createAuditController(injector: AuditInjector) {
     if (current?.tabId === tabId) await browser.storage.session.remove(AUDIT_CURRENT_KEY);
   }
 
-  return { handleRunAudit, handleAuditResult, handleTabUpdated, handleTabRemoved };
+  // ---- side-panel close detection ------------------------------------------
+  // Chrome's sidePanel API fires NO close event: a closing panel dies
+  // silently, and overlay cleanup used to happen only via panel-SENT messages
+  // — so nothing ever sent teardownAudit and the page overlay stayed up
+  // forever (the user-reported bug). Each panel therefore holds a long-lived
+  // port whose disconnect IS the close signal. SW lifecycle: this Set/Map is
+  // in-memory and dies with every MV3 service-worker suspension, but the
+  // suspension also drops the ports — and the PANEL side reconnects
+  // immediately, which wakes the SW and rebuilds this state; that panel-side
+  // reconnect loop is what keeps true-close detection alive across
+  // suspensions. Teardown stays best-effort either way (a close during a
+  // suspension is simply missed); the navigation-cleanup path
+  // (handleTabUpdated → page script death) is the eventual fallback.
+
+  /** Every connected panel port (one side panel per window is possible). */
+  const panelPorts = new Set<PanelPort>();
+  /** Each port's last-announced bound tab; entries appear on first announce. */
+  const panelTabs = new Map<PanelPort, number>();
+
+  function handlePanelConnect(port: PanelPort): void {
+    if (port.name !== PANEL_PORT_NAME) return;
+    panelPorts.add(port);
+    port.onMessage.addListener((msg) => {
+      if (typeof msg !== 'object' || msg === null) return;
+      const { tabId } = msg as { tabId?: unknown };
+      // Re-announcements overwrite: a rebind moves the port to the new tab.
+      if (typeof tabId === 'number') panelTabs.set(port, tabId);
+    });
+    port.onDisconnect.addListener(() => {
+      panelPorts.delete(port);
+      const tabId = panelTabs.get(port);
+      panelTabs.delete(port);
+      if (tabId === undefined) return; // never bound — nothing to clear
+      // Another window's panel may be bound to the SAME tab; its overlay
+      // must survive this panel's close.
+      for (const other of panelTabs.values()) {
+        if (other === tabId) return;
+      }
+      // Best-effort: the tab may already be closed or navigated away.
+      void injector.sendTeardown(tabId).catch(() => {});
+    });
+  }
+
+  return {
+    handleRunAudit,
+    handleAuditResult,
+    handleTabUpdated,
+    handleTabRemoved,
+    handlePanelConnect,
+  };
 }

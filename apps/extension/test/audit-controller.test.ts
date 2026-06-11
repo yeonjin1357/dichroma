@@ -3,10 +3,12 @@ import { fakeBrowser } from 'wxt/testing';
 import {
   AUDIT_CURRENT_KEY,
   AUDIT_ENTRY_CAP,
+  PANEL_PORT_NAME,
   auditResultKey,
   createAuditController,
   type AuditCurrent,
   type AuditInjector,
+  type PanelPort,
   type StoredAuditResult,
 } from '@/utils/audit-controller';
 import type { AuditEntry } from '@/utils/audit-messages';
@@ -15,7 +17,7 @@ import type { AuditEntry } from '@/utils/audit-messages';
 // controller takes them as an injectable AuditInjector (same seam pattern as
 // the simulation controller); the real wiring is covered by the Playwright e2e.
 function makeInjector(overrides: Partial<AuditInjector> = {}) {
-  const calls = { injected: [] as number[], reran: [] as number[] };
+  const calls = { injected: [] as number[], reran: [] as number[], teardown: [] as number[] };
   const injector: AuditInjector = {
     async injectAudit(tabId) {
       calls.injected.push(tabId);
@@ -23,9 +25,42 @@ function makeInjector(overrides: Partial<AuditInjector> = {}) {
     async sendRerun(tabId) {
       calls.reran.push(tabId);
     },
+    async sendTeardown(tabId) {
+      calls.teardown.push(tabId);
+    },
     ...overrides,
   };
   return { injector, calls };
+}
+
+// fake-browser (1.5.2) implements neither runtime.connect nor runtime.onConnect
+// (both throw 'not implemented'), so the close-detection tests drive
+// handlePanelConnect with hand-rolled fake ports through the PanelPort seam.
+function makeFakePort(name: string = PANEL_PORT_NAME) {
+  const messageListeners: Array<(msg: unknown) => void> = [];
+  const disconnectListeners: Array<() => void> = [];
+  const port: PanelPort = {
+    name,
+    onMessage: {
+      addListener(cb: (msg: unknown) => void) {
+        messageListeners.push(cb);
+      },
+    },
+    onDisconnect: {
+      addListener(cb: () => void) {
+        disconnectListeners.push(cb);
+      },
+    },
+  };
+  return {
+    port,
+    announce(tabId: number) {
+      for (const cb of messageListeners) cb({ tabId });
+    },
+    disconnect() {
+      for (const cb of disconnectListeners) cb();
+    },
+  };
 }
 
 async function auditFlag(tabId: number): Promise<unknown> {
@@ -250,5 +285,88 @@ describe('storage-backed result lifecycle', () => {
     await controller.handleTabRemoved(7);
     expect(await storedResult(7)).toBeUndefined();
     expect((await auditCurrent())?.tabId).toBe(9);
+  });
+});
+
+describe('side-panel close detection (port tracking)', () => {
+  beforeEach(() => {
+    fakeBrowser.reset();
+  });
+
+  it('sends teardownAudit to the disconnected port’s tab only', async () => {
+    const { injector, calls } = makeInjector();
+    const controller = createAuditController(injector);
+    const a = makeFakePort();
+    const b = makeFakePort();
+    controller.handlePanelConnect(a.port);
+    controller.handlePanelConnect(b.port);
+    a.announce(5);
+    b.announce(9);
+    a.disconnect();
+    expect(calls.teardown).toEqual([5]); // b's tab untouched
+    b.disconnect();
+    expect(calls.teardown).toEqual([5, 9]);
+  });
+
+  it('skips teardown while another panel is bound to the same tab', async () => {
+    const { injector, calls } = makeInjector();
+    const controller = createAuditController(injector);
+    const a = makeFakePort();
+    const b = makeFakePort();
+    controller.handlePanelConnect(a.port);
+    controller.handlePanelConnect(b.port);
+    a.announce(5);
+    b.announce(5);
+    a.disconnect();
+    expect(calls.teardown).toEqual([]); // b still owns tab 5's overlay
+    b.disconnect();
+    expect(calls.teardown).toEqual([5]); // last owner left → teardown
+  });
+
+  it('re-announcement updates the bound tab (panel rebind)', async () => {
+    const { injector, calls } = makeInjector();
+    const controller = createAuditController(injector);
+    const a = makeFakePort();
+    controller.handlePanelConnect(a.port);
+    a.announce(5);
+    a.announce(7); // rebind: auditStarted on another tab switched the panel
+    a.disconnect();
+    expect(calls.teardown).toEqual([7]);
+  });
+
+  it('swallows sendTeardown rejections (tab closed or navigated)', async () => {
+    const attempts: number[] = [];
+    const { injector } = makeInjector({
+      async sendTeardown(tabId) {
+        attempts.push(tabId);
+        throw new Error('Could not establish connection');
+      },
+    });
+    const controller = createAuditController(injector);
+    const a = makeFakePort();
+    controller.handlePanelConnect(a.port);
+    a.announce(5);
+    expect(() => a.disconnect()).not.toThrow();
+    await new Promise((resolve) => setTimeout(resolve, 0)); // flush the rejection
+    expect(attempts).toEqual([5]); // it was attempted, just best-effort
+  });
+
+  it('sends no teardown for a port that never announced a tab', async () => {
+    const { injector, calls } = makeInjector();
+    const controller = createAuditController(injector);
+    const a = makeFakePort();
+    controller.handlePanelConnect(a.port);
+    a.disconnect();
+    expect(calls.teardown).toEqual([]);
+  });
+
+  it('ignores ports with other names', async () => {
+    const { injector, calls } = makeInjector();
+    const controller = createAuditController(injector);
+    const stranger = makeFakePort('some-other-port');
+    controller.handlePanelConnect(stranger.port);
+    stranger.announce(5);
+    stranger.disconnect();
+    expect(calls.teardown).toEqual([]);
   });
 });

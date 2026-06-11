@@ -10,6 +10,7 @@ import {
 } from '@/utils/audit';
 import {
   AUDIT_CURRENT_KEY,
+  PANEL_PORT_NAME,
   auditResultKey,
   type AuditCurrent,
   type StoredAuditResult,
@@ -165,6 +166,8 @@ const RUN_TIMEOUT_MS = 30_000;
 
 /** Re-apply delay while 'Preview on page' is ON, so slider drags don't spam. */
 const PREVIEW_DEBOUNCE_MS = 150;
+
+type RuntimePort = ReturnType<typeof browser.runtime.connect>;
 
 export default function App() {
   const [tabId, setTabId] = useState<number | null>(null);
@@ -348,7 +351,10 @@ export default function App() {
     void browser.tabs.sendMessage(tabId, msg).catch(() => {});
   }, [tabId, classified, type]);
 
-  // Best-effort overlay cleanup when the panel goes away.
+  // Best-effort overlay cleanup when the panel goes away. A real side-panel
+  // close often never delivers this (the document dies silently) — the
+  // close-detection port below is the reliable path; this stays as a cheap
+  // fast path for the closes that DO fire pagehide.
   useEffect(() => {
     if (tabId == null) return;
     const onHide = () => {
@@ -357,6 +363,59 @@ export default function App() {
     };
     window.addEventListener('pagehide', onHide);
     return () => window.removeEventListener('pagehide', onHide);
+  }, [tabId]);
+
+  // Close-detection port: Chrome's sidePanel API fires NO close event, so the
+  // background can only learn this panel died from this long-lived port's
+  // onDisconnect (it then sends teardownAudit to the announced tab). The port
+  // also drops whenever the MV3 service worker suspends — reconnecting
+  // immediately wakes the SW and re-announces the bound tab, rebuilding its
+  // tracking state; that reconnect loop is what keeps true-close detection
+  // alive across SW suspensions. Teardown is best-effort regardless: the
+  // background's navigation-cleanup path is the eventual fallback.
+  const portRef = useRef<RuntimePort | null>(null);
+  const tabIdRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    let unmounted = false;
+    const connect = () => {
+      const port = browser.runtime.connect({ name: PANEL_PORT_NAME });
+      portRef.current = port;
+      port.onDisconnect.addListener(() => {
+        // SW restart, NOT a real close (a real close never runs panel code
+        // again — that asymmetry is the whole point of the port).
+        if (unmounted || portRef.current !== port) return;
+        connect();
+      });
+      // Re-announce after a reconnect; on first mount tabId is still null and
+      // the announce effect below covers the initial bind.
+      if (tabIdRef.current != null) {
+        try {
+          port.postMessage({ tabId: tabIdRef.current });
+        } catch {
+          // Port already dead again; the next reconnect re-announces.
+        }
+      }
+    };
+    connect();
+    return () => {
+      // Clean disconnect on unmount (best-effort: real closes skip cleanup).
+      unmounted = true;
+      portRef.current?.disconnect();
+      portRef.current = null;
+    };
+  }, []);
+
+  // Announce the bound tab over the port on every (re)bind — the background
+  // tears down THAT tab's overlay when this port disconnects for real.
+  useEffect(() => {
+    tabIdRef.current = tabId;
+    if (tabId == null) return;
+    try {
+      portRef.current?.postMessage({ tabId });
+    } catch {
+      // Port mid-reconnect: connect() re-announces from tabIdRef.
+    }
   }, [tabId]);
 
   /** Preview apply failed (activeTab expired): popup guidance + switch back. */

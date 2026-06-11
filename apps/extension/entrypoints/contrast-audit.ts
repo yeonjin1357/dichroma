@@ -271,9 +271,10 @@ function createAudit() {
 
   /**
    * Release everything a finished session holds in the page: overlay,
-   * staleness observer, and the index→element map. The panel cannot detect
-   * its own closing, so its pagehide clearOverlay triggers this too — a
-   * re-run re-creates all of it.
+   * staleness observer, and the index→element map. A closing panel reaches
+   * this through the background's port-disconnect teardownAudit (the
+   * sidePanel API has no close event of its own) or its best-effort pagehide
+   * clearOverlay — a re-run re-creates all of it.
    */
   function teardown(): void {
     model = null;
@@ -439,6 +440,13 @@ function createAudit() {
         void safeRun();
         break;
       case 'updateOverlay':
+        // Post-teardown no-op (documented behavior): teardownAudit cleared
+        // the index→element map, so a late updateOverlay — typically a
+        // reopened panel rendering its STORED results — has nothing to draw.
+        // Recreating an empty host would only leave ghost chrome on the page;
+        // the panel's Re-run is the recovery path that rebuilds the map (and
+        // with it the overlay).
+        if (elements.size === 0) break;
         model = { groups: msg.groups, badges: msg.badges, swatches: msg.swatches };
         ensureHost();
         renderBoxes();

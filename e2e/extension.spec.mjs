@@ -15,6 +15,7 @@ import { fileURLToPath } from 'node:url';
 import { chromium, expect, test } from '@playwright/test';
 import { PNG } from 'pngjs';
 import { simulateColor, simulatedWcagRatio, wcagRatio } from '@dichroma/core';
+import { DEMO_PAGE_HTML } from './demo-page.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const PROD_DIR = path.join(ROOT, 'apps/extension/.output/chrome-mv3');
@@ -88,7 +89,13 @@ test.beforeAll(async () => {
     }
     res.setHeader('content-type', 'text/html');
     res.end(
-      req.url === '/audit' ? AUDIT_PAGE_HTML : req.url === '/audit2' ? AUDIT2_PAGE_HTML : PAGE_HTML,
+      req.url === '/audit'
+        ? AUDIT_PAGE_HTML
+        : req.url === '/audit2'
+          ? AUDIT2_PAGE_HTML
+          : req.url === '/demo'
+            ? DEMO_PAGE_HTML // store-assets/make-screenshots.mjs fixture
+            : PAGE_HTML,
     );
   });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
@@ -522,6 +529,75 @@ test('contrast audit: one axe run, simulated-space classification, overlay, focu
   console.log('panel rebound to the second tab and rendered its results');
 
   await page2.close();
+  await panel.close();
+  await page.close();
+});
+
+test('closing the panel tears down the page overlay; reopen renders stored results, Re-run restores boxes', async () => {
+  const page = await context.newPage();
+  // The page script runs in the isolated world, but an uncaught exception in
+  // a runtime.onMessage listener would still surface here — collected to
+  // assert the post-teardown focusEntry/updateOverlay paths never throw.
+  const pageErrors = [];
+  page.on('pageerror', (err) => pageErrors.push(err));
+  await page.goto(`${baseUrl}audit`);
+  const tabId = await resolveTabId(`${baseUrl}audit`);
+  expect(tabId).toBeTruthy();
+
+  const extensionId = new URL(sw.url()).host;
+  let panel = await context.newPage();
+  await panel.goto(`chrome-extension://${extensionId}/sidepanel.html?tab=${tabId}`);
+  await panel.getByRole('button', { name: 'Run audit' }).click();
+
+  const overlayHost = () =>
+    page.evaluate(() => {
+      const host = [...document.documentElement.children].find((el) =>
+        el.hasAttribute('data-dichroma-overlay'),
+      );
+      return host ? { count: host.getAttribute('data-count') } : null;
+    });
+  // Default type stays Deuteranopia: red-on-black is fine for deutan, so the
+  // boxes are failing(1) + needs-review(1) = 2 (cvd-only joins under protan).
+  await expect.poll(overlayHost, { timeout: 15_000 }).toEqual({ count: '2' });
+  console.log('close-teardown: overlay up with data-count=2');
+
+  // Close the panel page. page.close() destroys the document exactly like a
+  // real side-panel close: the long-lived port disconnects, and the
+  // BACKGROUND sends teardownAudit to the announced tab — the sidePanel API
+  // itself fires no close event the panel could act on.
+  await panel.close();
+  await expect.poll(overlayHost, { timeout: 10_000 }).toBeNull();
+  console.log('close-teardown: overlay host removed after panel close');
+
+  // Reopen: the M3.2 pull path renders the STORED results…
+  panel = await context.newPage();
+  await panel.goto(`chrome-extension://${extensionId}/sidepanel.html?tab=${tabId}`);
+  await expect(
+    panel.getByRole('heading', { name: 'Already failing WCAG for everyone (1)' }),
+  ).toBeVisible({ timeout: 10_000 });
+  // …and no staleness banner: the page never navigated.
+  await expect(panel.locator('.banner')).toHaveCount(0);
+  console.log('close-teardown: reopened panel rendered stored results');
+
+  // The reopen DID re-send updateOverlay (same classify effect as a live
+  // result), but teardown emptied the page-side element map, so it no-ops by
+  // design: the overlay host stays absent until a Re-run rebuilds the map.
+  // focusEntry on the torn-down page must be equally inert — row click
+  // neither scrolls nor throws.
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await panel.locator('section.failing .row').click();
+  await panel.waitForTimeout(1000); // let any in-flight page command land
+  expect(await overlayHost()).toBeNull();
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  expect(pageErrors).toEqual([]);
+  console.log('close-teardown: post-teardown updateOverlay/focusEntry no-oped without errors');
+
+  // Re-run is the documented recovery path: boxes come back.
+  await panel.getByRole('button', { name: 'Re-run audit' }).click();
+  await expect.poll(overlayHost, { timeout: 15_000 }).toEqual({ count: '2' });
+  expect(pageErrors).toEqual([]);
+  console.log('close-teardown: Re-run restored the overlay (data-count=2)');
+
   await panel.close();
   await page.close();
 });
