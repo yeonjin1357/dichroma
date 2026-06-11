@@ -1,9 +1,31 @@
 {
   "name": "@dichroma/core",
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Scientifically accurate color-vision-deficiency simulation and simulated-space WCAG contrast — Viénot 1999, Brettel 1997, Machado 2009 in linear RGB, validated against DaltonLens",
   "type": "module",
   "license": "MIT",
   "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yeonjin1357/dichroma.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/yeonjin1357/dichroma/tree/main/packages/core#readme",
+  "bugs": "https://github.com/yeonjin1357/dichroma/issues",
+  "keywords": [
+    "color-blindness",
+    "color-vision-deficiency",
+    "cvd",
+    "protanopia",
+    "deuteranopia",
+    "tritanopia",
+    "accessibility",
+    "a11y",
+    "wcag",
+    "contrast",
+    "color-science",
+    "svg-filter"
+  ],
   "files": [
     "dist"
   ],

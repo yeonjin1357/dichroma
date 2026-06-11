@@ -10,10 +10,10 @@ whole-page simulation in browsers and computes WCAG contrast ratios in
 simulated color space.
 
 ```sh
-npm install @dichroma/core   # publishing soon — for now build from source
+npm install @dichroma/core
 ```
 
-Until the package is published, build it from this monorepo: `pnpm install &&
+Or build it from this monorepo: `pnpm install &&
 pnpm build` produces `packages/core/dist`.
 
 ## Usage
