@@ -38,8 +38,32 @@ Known limitations:
   "This page cannot be filtered".
 - Navigation resets the simulation unless "Keep across page navigation" is
   enabled (it asks for optional `<all_urls>` host access).
+- The contrast audit inspects the top-level frame only; iframe content is not
+  audited.
 
 TODO: store icons are intentionally deferred.
+
+## How the contrast audit works / accuracy
+
+The audit runs axe-core's color-contrast rule once on the top-level frame,
+then re-computes each text/background pair's WCAG ratio after mapping both
+colors through the selected CVD model (`simulatedWcagRatio`). Simulated-space
+ratios are estimates derived from CVD color models — not a normative WCAG
+result — and the dichromat simulations are themselves approximations of real
+perception. Treat flagged entries as candidates for human review, not as a
+compliance verdict; the side panel repeats this disclosure in a footnote.
+
+## Third-party software
+
+The contrast audit ships [axe-core](https://github.com/dequelabs/axe-core)
+(© Deque Systems, Inc., [MPL-2.0](https://www.mozilla.org/en-US/MPL/2.0/))
+unmodified as `vendor/axe.min.js`, with its license alongside as
+`vendor/LICENSE`. Both files are copied from the pinned npm package at build
+time; dichroma's own code is not derived from axe-core and only calls its
+public `axe.run` API.
+
+TODO: the Chrome Web Store listing description must repeat this axe-core
+attribution when the store submission is prepared.
 
 ## Development
 

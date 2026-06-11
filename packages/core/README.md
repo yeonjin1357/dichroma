@@ -10,8 +10,11 @@ whole-page simulation in browsers and computes WCAG contrast ratios in
 simulated color space.
 
 ```sh
-npm install @dichroma/core
+npm install @dichroma/core   # publishing soon — for now build from source
 ```
+
+Until the package is published, build it from this monorepo: `pnpm install &&
+pnpm build` produces `packages/core/dist`.
 
 ## Usage
 
@@ -48,8 +51,12 @@ simulatedWcagRatio([255, 0, 0], [0, 255, 0], 'deutan', 1);  // contrast as a deu
 
 ## Accuracy
 
-- Validated against DaltonLens-Python on the full 17³ sRGB grid for every
-  model/severity route: max per-channel delta ≤ 1/255.
+- The protan, deutan, and tritan routes are validated against
+  DaltonLens-Python on the full 17³ sRGB grid for every model/severity
+  combination: max per-channel delta ≤ 1/255.
+- Achromatopsia is validated by unit-test fixed points (every color maps to
+  its Rec. 709 luminance gray, ±1 after rounding); it has no external golden
+  anchor.
 - The SVG filters are verified pixel-for-pixel in headless Chrome (inline and
   data-URL delivery): max per-channel delta ≤ 3/255.
 

@@ -78,7 +78,23 @@ legend {
   font-variant-numeric: tabular-nums;
 }
 
-input:focus-visible {
+button {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+input:focus-visible,
+button:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
 }

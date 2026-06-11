@@ -1,0 +1,69 @@
+{
+  "extDescription": {
+    "message": "Scientifically accurate color-vision-deficiency simulator and contrast checker"
+  },
+  "legendSimulation": { "message": "Color vision simulation" },
+  "typeNone": { "message": "None" },
+  "typeProtanFull": { "message": "Protanopia" },
+  "typeProtanPartial": { "message": "Protanomaly" },
+  "typeDeutanFull": { "message": "Deuteranopia" },
+  "typeDeutanPartial": { "message": "Deuteranomaly" },
+  "typeTritanFull": { "message": "Tritanopia" },
+  "typeTritanPartial": { "message": "Tritanomaly" },
+  "typeAchroma": { "message": "Achromatopsia" },
+  "severityLabel": { "message": "Severity" },
+  "persistLabel": { "message": "Keep across page navigation" },
+  "auditButton": { "message": "Audit contrast" },
+  "errCannotFilter": { "message": "This page cannot be filtered." },
+  "errCannotAudit": { "message": "This page cannot be audited." },
+  "errGeneric": { "message": "Something went wrong. Try reopening the popup." },
+  "panelTitle": { "message": "Contrast audit" },
+  "typeLabel": { "message": "Type" },
+  "runAudit": { "message": "Run audit" },
+  "rerunAudit": { "message": "Re-run audit" },
+  "runningLabel": { "message": "Running…" },
+  "previewToggle": { "message": "Preview on page" },
+  "groupCvdOnly": {
+    "message": "Readable now — but fails for $TYPE$ users",
+    "placeholders": { "type": { "content": "$1", "example": "Protanopia" } }
+  },
+  "groupFailing": { "message": "Already failing WCAG for everyone" },
+  "groupNeedsReview": { "message": "Needs review" },
+  "groupNeedsReviewHint": { "message": "contrast could not be determined automatically" },
+  "rowCvdOnly": {
+    "message": "Hard to read for $TYPE$",
+    "placeholders": { "type": { "content": "$1", "example": "Protanopia" } }
+  },
+  "staleBanner": { "message": "Page changed — results may be stale. Re-run." },
+  "auditTruncated": { "message": "Too many results — only the first 1500 are shown." },
+  "heuristicFootnote": {
+    "message": "Simulated ratios are estimates from CVD color models — not a normative WCAG result."
+  },
+  "emptyState": {
+    "message": "Run an audit to find text whose contrast fails under color-vision simulation."
+  },
+  "errNoAccess": {
+    "message": "Open the dichroma toolbar popup to re-run the audit on this page."
+  },
+  "errAuditFailed": { "message": "Audit failed: $1" },
+  "errAuditTimeout": { "message": "Audit timed out — try re-running." },
+  "chipOriginal": { "message": "Original: $1 on $2, $3" },
+  "chipSimulated": { "message": "Simulated: $1 on $2, $3" },
+  "previewCaption": { "message": "Simulated: $1 $2" },
+  "badgeFails": { "message": "fails" },
+  "ratioLine": { "message": "$1 → $2 (needs $3)" },
+  "reasonDefault": { "message": "could not determine contrast" },
+  "reasonBgImage": { "message": "text over image" },
+  "reasonBgGradient": { "message": "gradient background" },
+  "reasonImgNode": { "message": "contains an image" },
+  "reasonBgOverlap": { "message": "overlapped by another element" },
+  "reasonFgAlpha": { "message": "transparent text color" },
+  "reasonElmPartiallyObscured": { "message": "partially obscured" },
+  "reasonElmPartiallyObscuring": { "message": "overlaps other content" },
+  "reasonOutsideViewport": { "message": "outside the viewport" },
+  "reasonEqualRatio": { "message": "1:1 contrast with the background" },
+  "reasonShortTextContent": { "message": "text too short to judge" },
+  "reasonNonBmp": { "message": "non-text characters" },
+  "reasonPseudoContent": { "message": "pseudo-element background" },
+  "reasonColorParse": { "message": "could not parse a color" }
+}

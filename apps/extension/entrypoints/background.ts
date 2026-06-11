@@ -1,4 +1,10 @@
 import { browser } from 'wxt/browser';
+import { createAuditController, type AuditInjector } from '@/utils/audit-controller';
+import {
+  isAuditBackgroundMessage,
+  isAuditEvent,
+  type AuditPageCommand,
+} from '@/utils/audit-messages';
 import { createSimulationController, type PageInjector } from '@/utils/controller';
 import { isSimulationMessage } from '@/utils/simulation';
 
@@ -74,15 +80,53 @@ const injector: PageInjector = {
   },
 };
 
+/** Real AuditInjector: lazy axe injection, main frame only. */
+const auditInjector: AuditInjector = {
+  async injectAudit(tabId) {
+    // The page script cannot learn its own tab id, but auditResult/auditStale
+    // must carry one for the panel to filter on; park it on the isolated
+    // world's window right before the files run.
+    await browser.scripting.executeScript({
+      target: { tabId },
+      args: [tabId],
+      func: (id: number) => {
+        (window as { __dichromaAuditTabId?: number }).__dichromaAuditTabId = id;
+      },
+    });
+    // axe-core is loaded ONLY here — never in the always-on path.
+    await browser.scripting.executeScript({
+      target: { tabId },
+      files: ['/vendor/axe.min.js', '/contrast-audit.js'],
+    });
+  },
+  async sendRerun(tabId) {
+    const msg: AuditPageCommand = { kind: 'rerunAudit' };
+    await browser.tabs.sendMessage(tabId, msg);
+  },
+};
+
 export default defineBackground(() => {
   const controller = createSimulationController(injector);
+  const auditController = createAuditController(auditInjector);
 
   browser.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-    if (!isSimulationMessage(msg)) return;
-    controller
-      .handleMessage(msg)
-      .then(sendResponse, (err) => sendResponse({ ok: false, error: String(err) }));
-    return true; // keep the channel open for the async response
+    if (isSimulationMessage(msg)) {
+      controller
+        .handleMessage(msg)
+        .then(sendResponse, (err) => sendResponse({ ok: false, error: String(err) }));
+      return true; // keep the channel open for the async response
+    }
+    if (isAuditBackgroundMessage(msg)) {
+      auditController
+        .handleRunAudit(msg.tabId)
+        .then(sendResponse, (err) => sendResponse({ ok: false, error: String(err) }));
+      return true;
+    }
+    // Audit events flow page → panel directly (broadcast); the background
+    // only persists the result copy so a not-yet-open panel can pull it.
+    if (isAuditEvent(msg) && msg.kind === 'auditResult') {
+      void auditController.handleAuditResult(msg);
+    }
   });
 
   // Invoking the keyboard command grants activeTab, so this works without
@@ -93,9 +137,11 @@ export default defineBackground(() => {
 
   browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
     void controller.handleTabUpdated(tabId, changeInfo);
+    void auditController.handleTabUpdated(tabId, changeInfo);
   });
 
   browser.tabs.onRemoved.addListener((tabId) => {
     void controller.handleTabRemoved(tabId);
+    void auditController.handleTabRemoved(tabId);
   });
 });

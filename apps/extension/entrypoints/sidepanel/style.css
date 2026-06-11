@@ -1,0 +1,233 @@
+/* Side-panel styling: WCAG AA — 4.5:1+ text contrast in both schemes,
+   visible focus indicators, no color-only state signaling (groups carry
+   headings and text, never just a hue). */
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --fg: #1c1c1c; /* 15.8:1 on --bg */
+  --muted: #595959; /* 7:1 on --bg */
+  --border: #767676;
+  --focus: #1a56b8; /* 4.5:1+ on white */
+  --banner-bg: #fff3cd;
+  --banner-fg: #5c4400; /* 7.4:1 on --banner-bg */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1f1f1f;
+    --fg: #ececec; /* 13.6:1 on --bg */
+    --muted: #b3b3b3;
+    --border: #8a8a8a;
+    --focus: #8ab4f8;
+    --banner-bg: #4a3b00;
+    --banner-fg: #ffe18a;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 14px/1.5 system-ui, sans-serif;
+}
+
+main {
+  display: grid;
+  gap: 12px;
+  padding: 12px 14px 16px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.controls {
+  display: grid;
+  gap: 8px;
+}
+
+.field {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.field input[type='range'] {
+  width: 100%;
+}
+
+.field output {
+  min-width: 2.2em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+button {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Four-type summary chips: 'P 3 · D 1 · T 0 · A 2'. */
+.summary-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+}
+
+.type-chip {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Active type: border + underline (+ aria-pressed) — never color alone. */
+.type-chip[aria-pressed='true'] {
+  border-color: var(--fg);
+  box-shadow: inset 0 0 0 1px var(--fg);
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.preview-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.banner {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 4px;
+  background: var(--banner-bg);
+  color: var(--banner-fg);
+}
+
+.footnote {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--fg);
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.empty {
+  margin: 0;
+  color: var(--muted);
+}
+
+/* Persistent heuristic disclosure under the results. */
+.heuristic-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.group {
+  display: grid;
+  gap: 6px;
+}
+
+/* Collapsed-by-default needs-review group (native disclosure widget). */
+.group summary {
+  cursor: pointer;
+}
+
+.group summary h2 {
+  display: inline;
+}
+
+.hint {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.group ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  padding: 6px 8px;
+  text-align: left;
+}
+
+/* cvd-only rows lead with the human sentence. */
+.row-headline {
+  font-weight: 600;
+}
+
+.row-snippet {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row-detail {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Ratios demoted to a smaller secondary line; the sentence carries the row. */
+.row-ratio {
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* Original/simulated preview chips: real snippet text in real resolved
+   colors, clamped to one line. ≥12px so the preview is actually readable. */
+.chip {
+  display: inline-block;
+  max-width: 110px;
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}

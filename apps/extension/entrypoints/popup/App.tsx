@@ -1,6 +1,7 @@
 import type { CvdType } from '@dichroma/core';
 import { useEffect, useState } from 'react';
 import { browser } from 'wxt/browser';
+import { t } from '@/utils/i18n';
 import {
   displayName,
   type Prefs,
@@ -12,8 +13,6 @@ import {
 const CVD_TYPES: CvdType[] = ['protan', 'deutan', 'tritan', 'achromatopsia'];
 
 type Choice = CvdType | 'none';
-
-const GENERIC_ERROR = 'Something went wrong. Try reopening the popup.';
 
 async function sendMessage(msg: SimulationMessage): Promise<SimulationResponse> {
   return (await browser.runtime.sendMessage(msg)) as SimulationResponse;
@@ -30,11 +29,13 @@ export default function App() {
     void (async () => {
       // TEST HOOK: `?tab=<id>` overrides the target tab. The e2e suite opens
       // popup.html as a regular page, which would otherwise make popup.html
-      // itself the "active tab".
+      // itself the "active tab". Only a non-negative integer counts;
+      // anything else falls back to the active-tab query.
       const override = new URLSearchParams(location.search).get('tab');
+      const parsed = override === null ? NaN : Number(override);
       let id: number | undefined;
-      if (override) {
-        id = Number(override);
+      if (Number.isInteger(parsed) && parsed >= 0) {
+        id = parsed;
       } else {
         const [active] = await browser.tabs.query({ active: true, currentWindow: true });
         id = active?.id;
@@ -48,7 +49,7 @@ export default function App() {
           setSeverity(res.state.settings.severity);
         }
       } catch {
-        setStatus(GENERIC_ERROR);
+        setStatus(t('errGeneric'));
       }
       const { prefs } = await browser.storage.local.get('prefs');
       setPersist((prefs as Prefs | undefined)?.persist ?? false);
@@ -65,9 +66,9 @@ export default function App() {
           ? { kind: 'clear', tabId }
           : { kind: 'apply', tabId, settings },
       );
-      setStatus(res.ok ? '' : 'This page cannot be filtered.');
+      setStatus(res.ok ? '' : t('errCannotFilter'));
     } catch {
-      setStatus(GENERIC_ERROR);
+      setStatus(t('errGeneric'));
     }
   }
 
@@ -79,6 +80,21 @@ export default function App() {
   function onSeverity(next: number) {
     setSeverity(next);
     if (choice !== 'none') void send({ type: choice, severity: next });
+  }
+
+  async function onAudit() {
+    if (tabId == null) return;
+    try {
+      // sidePanel.open consumes the click's user gesture, so it must be the
+      // FIRST async call here — never routed through a background hop.
+      await browser.sidePanel.open({ tabId });
+      const res = (await browser.runtime.sendMessage({ kind: 'runAudit', tabId })) as
+        | { ok: boolean }
+        | undefined;
+      setStatus(res?.ok ? '' : t('errCannotAudit'));
+    } catch {
+      setStatus(t('errGeneric'));
+    }
   }
 
   async function onPersist(checked: boolean) {
@@ -108,7 +124,7 @@ export default function App() {
       <h1>dichroma</h1>
 
       <fieldset>
-        <legend>Color vision simulation</legend>
+        <legend>{t('legendSimulation')}</legend>
         <label className="choice">
           <input
             type="radio"
@@ -118,25 +134,27 @@ export default function App() {
             disabled={!ready}
             onChange={() => onChoice('none')}
           />
-          None
+          {displayName('none', severity)}
         </label>
-        {CVD_TYPES.map((t) => (
-          <label className="choice" key={t}>
+        {CVD_TYPES.map((type) => (
+          <label className="choice" key={type}>
             <input
               type="radio"
               name="cvd"
-              value={t}
-              checked={choice === t}
+              value={type}
+              checked={choice === type}
               disabled={!ready}
-              onChange={() => onChoice(t)}
+              onChange={() => onChoice(type)}
             />
-            {displayName(t, severity)}
+            {/* Severity-aware (-opia at 1, -omaly below) AND localized: ko
+                carries the medical annotations via the catalog. */}
+            {displayName(type, severity)}
           </label>
         ))}
       </fieldset>
 
       <div className="severity">
-        <label htmlFor="severity">Severity</label>
+        <label htmlFor="severity">{t('severityLabel')}</label>
         <input
           id="severity"
           type="range"
@@ -157,8 +175,12 @@ export default function App() {
           disabled={!ready}
           onChange={(e) => void onPersist(e.target.checked)}
         />
-        Keep across page navigation
+        {t('persistLabel')}
       </label>
+
+      <button type="button" disabled={!ready} onClick={() => void onAudit()}>
+        {t('auditButton')}
+      </button>
 
       {/* Always mounted so screen readers announce changes to the live
           region; the box styling is suppressed while there is no message. */}

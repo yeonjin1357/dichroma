@@ -8,3 +8,6 @@ tools/.venv/
 *.tsbuildinfo
 .env*
 *.log
+
+# axe-core vendored at build time by the wxt build:before hook (build artifact)
+apps/extension/public/vendor/

@@ -42,11 +42,17 @@ const FILTER_ID_PATTERN = /dichroma-(protan|deutan|tritan|achromatopsia)-(\d+)/;
  * Recover settings from a live filter id (e.g. "dichroma-protan-50" →
  * protan at 0.5). Works on both delivery forms: the data-URL keeps the raw
  * `#id` fragment and the inline fallback shows `url("#id")`.
+ *
+ * The computed filter string is PAGE-CONTROLLED: a hostile page can mint a
+ * lookalike id. Only an integer 0–100 is something buildSvgFilter could have
+ * produced; anything else is a foreign filter and must never be adopted.
  */
 function parseDichromaFilter(filter: string): { type: CvdType; severity: number } | null {
   const m = FILTER_ID_PATTERN.exec(filter);
   if (!m) return null;
-  return { type: m[1] as CvdType, severity: Number(m[2]) / 100 };
+  const n = Number(m[2]);
+  if (!Number.isInteger(n) || n < 0 || n > 100) return null;
+  return { type: m[1] as CvdType, severity: n / 100 };
 }
 
 export function createSimulationController(injector: PageInjector) {

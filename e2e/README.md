@@ -22,4 +22,14 @@ pnpm --filter e2e run test:filter
 The Chrome binary is taken from `$CHROME_BIN`, falling back to the local
 Playwright Chromium install; if neither exists the test SKIPs (exit 0).
 
-The extension e2e test lands in M2.
+## extension.spec.mjs (M2/M3)
+
+Playwright suite that loads the built extension (`wxt build --mode e2e`,
+which adds `host_permissions` so automation can script pages) and drives the
+popup simulation flows, the navigation/persist regressions, and the M3
+contrast audit (side panel via its `?tab=` hook, simulated-space group
+counts, in-page overlay, focus-on-click):
+
+```sh
+pnpm --filter e2e run test:extension
+```

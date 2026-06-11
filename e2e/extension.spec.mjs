@@ -9,12 +9,12 @@
 // are asserted below.
 import { execSync } from 'node:child_process';
 import { createServer } from 'node:http';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium, expect, test } from '@playwright/test';
 import { PNG } from 'pngjs';
-import { simulateColor } from '@dichroma/core';
+import { simulateColor, simulatedWcagRatio, wcagRatio } from '@dichroma/core';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const PROD_DIR = path.join(ROOT, 'apps/extension/.output/chrome-mv3');
@@ -31,6 +31,35 @@ const PAGE_HTML =
   '<button id="spa-nav" style="position:fixed;bottom:10px;left:10px" ' +
   "onclick=\"history.pushState({}, '', '/spa-route')\">SPA nav</button>" +
   '<div style="height:3000px"></div></body></html>';
+
+// Contrast-audit fixture (route /audit), one case per result group:
+// #cvd-only passes WCAG in true colors (5.25:1) but drops to ≈3.1:1 under
+// protanopia severity 1; #always-fail is ≈2:1 gray-on-white; #needs-review
+// puts text over a gradient, which axe cannot resolve to a single bgColor.
+const AUDIT_PAGE_HTML =
+  '<!doctype html><html><body style="margin:0;background:#ffffff">' +
+  '<p id="cvd-only" style="color:#ff0000;background-color:#000000">Red on black: fine for most, unreadable under protanopia</p>' +
+  '<p id="always-fail" style="color:#b8b8b8;background-color:#ffffff">Light gray on white fails for everyone</p>' +
+  '<p id="needs-review" style="background-image:linear-gradient(#ffffff,#eeeeee)">Text over a gradient needs human eyes</p>' +
+  '<div style="height:3000px"></div></body></html>';
+
+// Second audit fixture (route /audit2) for the panel-rebind scenario: a
+// DIFFERENT group tally than /audit so the rebound results are unambiguous,
+// and enough nodes (200) that axe takes a beat — the transient Running…
+// state stays observable.
+const AUDIT2_PAGE_HTML =
+  '<!doctype html><html><body style="margin:0;background:#ffffff">' +
+  Array.from(
+    { length: 40 },
+    (_, i) =>
+      `<p style="color:#b8b8b8;background-color:#ffffff">Second tab gray on white ${i + 1}</p>`,
+  ).join('') +
+  Array.from(
+    { length: 160 },
+    (_, i) =>
+      `<p style="color:#1c1c1c;background-color:#ffffff">Second tab passing text ${i + 1}</p>`,
+  ).join('') +
+  '</body></html>';
 
 /** @type {import('@playwright/test').BrowserContext} */ let context;
 /** @type {import('@playwright/test').Worker} */ let sw;
@@ -58,7 +87,9 @@ test.beforeAll(async () => {
       return;
     }
     res.setHeader('content-type', 'text/html');
-    res.end(PAGE_HTML);
+    res.end(
+      req.url === '/audit' ? AUDIT_PAGE_HTML : req.url === '/audit2' ? AUDIT2_PAGE_HTML : PAGE_HTML,
+    );
   });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   baseUrl = `http://127.0.0.1:${server.address().port}/`;
@@ -122,10 +153,31 @@ async function openPopup(tabId) {
   return popup;
 }
 
-test('production manifest ships without host_permissions', () => {
+test('production manifest ships without host_permissions', async () => {
   expect(prodManifest.host_permissions).toBeUndefined();
-  expect(prodManifest.permissions.sort()).toEqual(['activeTab', 'scripting', 'storage']);
+  expect(prodManifest.permissions.sort()).toEqual([
+    'activeTab',
+    'scripting',
+    'sidePanel',
+    'storage',
+  ]);
   expect(prodManifest.optional_host_permissions).toEqual(['<all_urls>']);
+  expect(prodManifest.side_panel).toEqual({ default_path: 'sidepanel.html' });
+  // The vendor copy hook must work from a clean output: axe shipped
+  // unmodified with its MPL-2.0 LICENSE alongside.
+  expect(existsSync(path.join(PROD_DIR, 'vendor/axe.min.js'))).toBe(true);
+  expect(existsSync(path.join(PROD_DIR, 'vendor/LICENSE'))).toBe(true);
+
+  // i18n plumbing: en is the default locale, public/_locales lands at the
+  // output root, and Chrome actually resolves messages from it — the loaded
+  // build's SW must return a non-empty extDescription.
+  expect(prodManifest.default_locale).toBe('en');
+  expect(prodManifest.description).toBe('__MSG_extDescription__');
+  expect(existsSync(path.join(PROD_DIR, '_locales/en/messages.json'))).toBe(true);
+  expect(existsSync(path.join(PROD_DIR, '_locales/ko/messages.json'))).toBe(true);
+  const extDescription = await sw.evaluate(() => chrome.i18n.getMessage('extDescription'));
+  console.log(`SW i18n.getMessage('extDescription'): '${extDescription}'`);
+  expect(extDescription.length).toBeGreaterThan(0);
 });
 
 test('e2e-mode manifest carries host_permissions <all_urls>', () => {
@@ -276,5 +328,247 @@ test('Bug B: SPA pushState keeps the filter, getState adopts it, and None remove
   for (const d of revertDeltas) expect(d).toBeLessThanOrEqual(1);
 
   await popup.close();
+  await page.close();
+});
+
+test('contrast audit: one axe run, simulated-space classification, overlay, focus', async () => {
+  const page = await context.newPage();
+  await page.goto(`${baseUrl}audit`);
+  const tabId = await resolveTabId(`${baseUrl}audit`);
+  expect(tabId).toBeTruthy();
+
+  // Open the side panel as a regular page through its ?tab= test hook.
+  const extensionId = new URL(sw.url()).host;
+  const panel = await context.newPage();
+  await panel.goto(`chrome-extension://${extensionId}/sidepanel.html?tab=${tabId}`);
+
+  // Defaults: severity 1, type Deuteranopia — the P summary chip (not the
+  // select) switches the classification to Protanopia after the run.
+  await expect(panel.getByLabel('Severity')).toHaveValue('1');
+
+  // Run: panel → background runAudit → executeScript injects
+  // vendor/axe.min.js + contrast-audit.js (the e2e build's host_permissions
+  // stand in for the activeTab grant a real popup click would provide).
+  await panel.getByRole('button', { name: 'Run audit' }).click();
+
+  // Human-centered heading under the default Deuteranopia: red-on-black is
+  // NOT a deutan failure, so cvd-only counts 0 here.
+  await expect(
+    panel.getByRole('heading', { name: 'Readable now — but fails for Deuteranopia users (0)' }),
+  ).toBeVisible({ timeout: 15_000 });
+
+  // Four-type summary bar: would-be cvd-only tallies per type at the current
+  // severity (protan=1, deutan=0 on this fixture); accessible names carry the
+  // FULL localized type name + count, the visible text the badge letter.
+  const pChip = panel.getByRole('button', { name: 'Protanopia: 1' });
+  await expect(pChip).toHaveText('P 1');
+  await expect(panel.getByRole('button', { name: 'Deuteranopia: 0' })).toHaveText('D 0');
+  console.log('summary bar: protan=1 deutan=0');
+
+  // Clicking the P chip switches the type select and reclassifies locally
+  // (no axe re-run); the active chip is marked via aria-pressed.
+  await pChip.click();
+  await expect(panel.getByLabel('Type')).toHaveValue('protan');
+  await expect(pChip).toHaveAttribute('aria-pressed', 'true');
+
+  // Group counts under Protanopia: exactly one entry per group.
+  await expect(
+    panel.getByRole('heading', { name: 'Readable now — but fails for Protanopia users (1)' }),
+  ).toBeVisible();
+  await expect(
+    panel.getByRole('heading', { name: 'Already failing WCAG for everyone (1)' }),
+  ).toBeVisible();
+  await expect(panel.locator('details.needs-review summary')).toContainText('Needs review (1)');
+  console.log('audit groups: cvd-only=1 failing=1 needs-review=1');
+
+  // cvd-only rows lead with the human sentence; the snippet follows.
+  const cvdRow = panel.locator('section.cvd-only .row');
+  await expect(cvdRow.locator('.row-headline')).toHaveText('Hard to read for Protanopia');
+  console.log('cvd-only row headline: Hard to read for Protanopia');
+
+  // axe 4.12.x field-presence guard: the pinned version must keep exposing
+  // resolved fgColor/bgColor in the check data (rows mirror them 1:1).
+  await expect(cvdRow).toHaveAttribute('data-fg', '#ff0000');
+  await expect(cvdRow).toHaveAttribute('data-bg', '#000000');
+  const failRow = panel.locator('section.failing .row');
+  await expect(failRow).toHaveAttribute('data-fg', '#b8b8b8');
+  await expect(failRow).toHaveAttribute('data-bg', '#ffffff');
+
+  // Preview chips: original + simulated snippet text, with the row's
+  // data-sim-* derived from simulateColor (never hardcoded hex).
+  const toHex = (rgb) =>
+    `#${rgb.map((c) => Math.round(c).toString(16).padStart(2, '0')).join('')}`;
+  const simFg = toHex(simulateColor([255, 0, 0], 'protan', 1));
+  const simBg = toHex(simulateColor([0, 0, 0], 'protan', 1));
+  await expect(cvdRow).toHaveAttribute('data-sim-fg', simFg);
+  await expect(cvdRow).toHaveAttribute('data-sim-bg', simBg);
+  await expect(cvdRow.locator('.chip')).toHaveCount(2);
+  await expect(cvdRow.locator('.chip-original')).toContainText('Red on black');
+  await expect(cvdRow.locator('.chip-simulated')).toContainText('Red on black');
+  const simChipLabel = await cvdRow.locator('.chip-simulated').getAttribute('aria-label');
+  console.log(`simulated chip aria-label: '${simChipLabel}'`);
+  expect(simChipLabel).toContain(`${simFg} on ${simBg}`);
+
+  // Ratio line derived from @dichroma/core, not hardcoded: original →
+  // simulated (needs expected), e.g. '5.3:1 → 3.1:1 (needs 4.5:1)'.
+  const fmt = (r) => `${Math.round(r * 10) / 10}:1`;
+  const orig = wcagRatio([255, 0, 0], [0, 0, 0]);
+  const sim = simulatedWcagRatio([255, 0, 0], [0, 0, 0], 'protan', 1);
+  const ratioLine = `${fmt(orig)} → ${fmt(sim)} (needs 4.5:1)`;
+  await expect(cvdRow).toContainText(ratioLine);
+  console.log(`cvd-only ratio line asserted: '${ratioLine}'`);
+
+  // Needs-review is collapsed by default (inconclusive, not failing): the
+  // native disclosure hides the rows until the summary is activated.
+  const needsReview = panel.locator('details.needs-review');
+  await expect(needsReview).toHaveJSProperty('open', false);
+  await expect(needsReview.locator('.row')).toBeHidden();
+  await needsReview.locator('summary').click();
+  await expect(needsReview).toHaveJSProperty('open', true);
+  // Expanded rows surface the human-readable axe reason.
+  await expect(needsReview.locator('.row')).toBeVisible();
+  await expect(needsReview.locator('.row')).toContainText('gradient background');
+  console.log('needs-review collapsed by default; expanding revealed the gradient row');
+
+  // The page now carries the overlay host (closed shadow root, so assert the
+  // host's popover attribute and its data-count box tally instead).
+  const overlayHost = () =>
+    page.evaluate(() => {
+      const host = [...document.documentElement.children].find((el) =>
+        el.hasAttribute('data-dichroma-overlay'),
+      );
+      return host
+        ? { popover: host.getAttribute('popover'), count: host.getAttribute('data-count') }
+        : null;
+    });
+  await expect.poll(overlayHost, { timeout: 10_000 }).toEqual({ popover: 'manual', count: '3' });
+  console.log(`overlay host: ${JSON.stringify(await overlayHost())}`);
+
+  // Row click focuses the flagged element in the page (scrollIntoView).
+  await page.evaluate(() => window.scrollTo(0, document.scrollingElement.scrollHeight));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(2000);
+  await cvdRow.click();
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY), { timeout: 10_000 })
+    .toBeLessThan(1000);
+  const inViewport = await page.evaluate(() => {
+    const r = document.getElementById('cvd-only').getBoundingClientRect();
+    return r.top >= 0 && r.bottom <= window.innerHeight;
+  });
+  expect(inViewport).toBe(true);
+  console.log(`focusEntry scrolled the page; #cvd-only in viewport: ${inViewport}`);
+
+  // The row click also opens the in-page preview card (closed shadow root,
+  // so the audit script reflects liveness as data-preview on the host) …
+  const previewAttr = () =>
+    page.evaluate(() => {
+      const host = [...document.documentElement.children].find((el) =>
+        el.hasAttribute('data-dichroma-overlay'),
+      );
+      return host?.getAttribute('data-preview') ?? null;
+    });
+  await expect.poll(previewAttr, { timeout: 3000 }).toBe('1');
+  console.log('preview card live: data-preview=1');
+  // … and it auto-dismisses (4s timer) within ~5s of appearing.
+  await expect.poll(previewAttr, { timeout: 6000 }).toBe(null);
+  console.log('preview card auto-dismissed');
+
+  // ---- storage-backed lifecycle (M3.2) -------------------------------------
+
+  // Heuristic disclosure: the footnote is always present in the panel DOM.
+  await expect(panel.locator('.heuristic-note')).toContainText(
+    'estimates from CVD color models',
+  );
+  console.log('heuristic footnote present in the panel');
+
+  // Navigation kills the page-side script — the only auditStale emitter — so
+  // the BACKGROUND must flag the stored result (auditInvalidated) and the
+  // panel must show the staleness banner while keeping the results visible.
+  await page.reload();
+  await expect(panel.locator('.banner')).toContainText('results may be stale', {
+    timeout: 10_000,
+  });
+  await expect(
+    panel.getByRole('heading', { name: 'Readable now — but fails for Protanopia users (1)' }),
+  ).toBeVisible();
+  console.log('staleness banner shown after reload; results kept');
+
+  // A popup-triggered audit on ANOTHER tab must rebind the still-open panel:
+  // auditStarted switches it to Running…, then that tab's results render.
+  // The runAudit is sent from the panel page's own context because an
+  // extension context never receives its own runtime message — the SW
+  // cannot self-message the way the popup does, and the rebinding events
+  // (auditStarted/auditResult) are broadcast by OTHER contexts anyway.
+  const page2 = await context.newPage();
+  await page2.goto(`${baseUrl}audit2`);
+  const tab2Id = await resolveTabId(`${baseUrl}audit2`);
+  expect(tab2Id).toBeTruthy();
+  await panel.evaluate((id) => {
+    void chrome.runtime.sendMessage({ kind: 'runAudit', tabId: id });
+  }, tab2Id);
+  await expect(panel.getByRole('button', { name: 'Running…' })).toBeVisible({
+    timeout: 10_000,
+  });
+  console.log('panel rebound: Running… shown for the second tab');
+  await expect(
+    panel.getByRole('heading', { name: 'Already failing WCAG for everyone (40)' }),
+  ).toBeVisible({ timeout: 15_000 });
+  await expect(
+    panel.getByRole('heading', { name: 'Readable now — but fails for Protanopia users (0)' }),
+  ).toBeVisible();
+  await expect(panel.locator('section.failing .row').first()).toContainText(
+    'Second tab gray on white 1',
+  );
+  console.log('panel rebound to the second tab and rendered its results');
+
+  await page2.close();
+  await panel.close();
+  await page.close();
+});
+
+test("panel 'Preview on page' applies the full-page simulation and reverts", async () => {
+  const page = await context.newPage();
+  await page.goto(baseUrl); // red body — the center pixel proves the filter
+  const tabId = await resolveTabId(baseUrl);
+  expect(tabId).toBeTruthy();
+
+  const extensionId = new URL(sw.url()).host;
+  const panel = await context.newPage();
+  await panel.goto(`chrome-extension://${extensionId}/sidepanel.html?tab=${tabId}`);
+
+  // No simulation is active on the tab, so the switch initializes OFF.
+  const toggle = panel.getByRole('switch', { name: 'Preview on page' });
+  await expect(toggle).not.toBeChecked();
+
+  const isSimulated = (expected) => async () => {
+    const center = await centerPixel(page);
+    return center.every((c, k) => Math.abs(c - expected[k]) <= 3);
+  };
+
+  // ON → the panel sends the EXISTING apply message; the background inserts
+  // the css and sets the badge exactly like the popup path (panel defaults:
+  // deutan severity 1).
+  await toggle.check();
+  await expect.poll(() => badgeText(tabId), { timeout: 10_000 }).toBe('D');
+  const expectedD = simulateColor([255, 0, 0], 'deutan', 1);
+  await expect.poll(isSimulated(expectedD), { timeout: 10_000 }).toBe(true);
+  console.log(`preview ON: center matches deutan simulation [${expectedD}]`);
+
+  // While ON, changing the panel type re-sends apply (debounced).
+  await panel.getByLabel('Type').selectOption('protan');
+  await expect.poll(() => badgeText(tabId), { timeout: 10_000 }).toBe('P');
+  const expectedP = simulateColor([255, 0, 0], 'protan', 1);
+  await expect.poll(isSimulated(expectedP), { timeout: 10_000 }).toBe(true);
+  console.log(`preview re-applied on type change: center matches protan [${expectedP}]`);
+
+  // OFF → clear: the page reverts exactly and the badge empties.
+  await toggle.uncheck();
+  await expect.poll(() => badgeText(tabId), { timeout: 10_000 }).toBe('');
+  const reverted = await centerPixel(page);
+  const revertDeltas = reverted.map((c, k) => Math.abs(c - [255, 0, 0][k]));
+  console.log(`preview OFF reverted center: got [${reverted}] deltas [${revertDeltas}]`);
+  for (const d of revertDeltas) expect(d).toBeLessThanOrEqual(1);
+
+  await panel.close();
   await page.close();
 });

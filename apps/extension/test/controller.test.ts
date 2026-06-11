@@ -480,6 +480,22 @@ describe('getState reconciliation', () => {
     expect(await fakeBrowser.action.getBadgeText({ tabId: 53 })).toBe('P');
   });
 
+  it('does not adopt a filter id with out-of-range severity (dichroma-protan-150)', async () => {
+    // The computed filter string is page-controlled: a hostile page can fake
+    // a dichroma id. Only integer 0–100 is something WE could have minted;
+    // anything else is a foreign filter and must never become state.
+    const { injector } = makeInjector({
+      async probePage() {
+        return { filter: 'url("#dichroma-protan-150")', hasFallbackNodes: false };
+      },
+    });
+    const c = createSimulationController(injector);
+    const res = await c.handleMessage({ kind: 'getState', tabId: 60 });
+    expect(res).toEqual({ ok: true, state: null });
+    expect(await sessionState(60)).toBeUndefined();
+    expect(await fakeBrowser.action.getBadgeText({ tabId: 60 })).toBe('');
+  });
+
   it('re-adopts with fallback:true when the fallback nodes are present', async () => {
     const { injector } = makeInjector({
       async readRootFilter() {
