@@ -60,7 +60,7 @@ dichroma collects no data of any kind. All color analysis runs locally in your b
 THIRD-PARTY SOFTWARE
 The contrast audit ships axe-core (© Deque Systems, Inc., MPL-2.0) unmodified as vendor/axe.min.js, with its license included in the package at vendor/LICENSE.
 
-Source code: <GITHUB_REPO_URL>
+Source code: https://github.com/yeonjin1357/dichroma
 ```
 
 ## Category recommendation
@@ -127,4 +127,4 @@ Requested at runtime only when the user enables the optional "Keep across page n
   obfuscated) with its MPL-2.0 license at `vendor/LICENSE`. No remotely
   hosted code is loaded or evaluated (Manifest V3 compliant).
 - **Privacy policy URL** (set on the developer **account** page) —
-  `<GITHUB_REPO_URL>/blob/main/PRIVACY.md` (fill in after the repo is public).
+  `https://github.com/yeonjin1357/dichroma/blob/main/PRIVACY.md` (fill in after the repo is public).

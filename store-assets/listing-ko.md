@@ -62,7 +62,7 @@ dichroma는 어떤 데이터도 수집하지 않습니다. 모든 색 분석은 
 서드파티 소프트웨어
 대비 검사는 axe-core(© Deque Systems, Inc., MPL-2.0)를 수정 없이 vendor/axe.min.js로 동봉하며, 라이선스 전문이 패키지 안 vendor/LICENSE에 포함되어 있습니다.
 
-소스 코드: <GITHUB_REPO_URL>
+소스 코드: https://github.com/yeonjin1357/dichroma
 ```
 
 ## 카테고리 추천
