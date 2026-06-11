@@ -160,6 +160,7 @@ PRIVACY.md URL을 입력하세요. 데이터 공개 답변과 개인정보처리
 4. 이후 버전 업데이트: `apps/extension/package.json` 버전 올리기 →
    `pnpm zip` → 대시보드 Package 탭에 새 zip 업로드 → 재심사 (같은 심사
    절차를 다시 거칩니다).
+5. GitHub Pages를 한 번 활성화 (Settings → Pages → Source: **GitHub Actions**) — 이후 main 푸시마다 웹 데모가 <https://yeonjin1357.github.io/dichroma/> 로 배포됩니다.
 
 ---
 

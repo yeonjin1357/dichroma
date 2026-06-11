@@ -33,3 +33,18 @@ counts, in-page overlay, focus-on-click):
 ```sh
 pnpm --filter e2e run test:extension
 ```
+
+## web.spec.mjs (M4a)
+
+Playwright suite for the client-side web app. It builds `@dichroma/core` +
+`apps/web`, then serves `apps/web/dist` with a tiny static `node:http` server
+that honors the production `/dichroma/` base path (chosen over `vite preview`
+because it needs no workspace exec/port plumbing and exercises exactly the
+GitHub Pages URL layout). The tests assert the sample-image canvases render,
+the deutan/severity-1 simulated canvas pixel matches `simulateColor` (±1),
+the palette checker's red-on-black ratios/badges match core, and the Korean
+language toggle works:
+
+```sh
+pnpm --filter e2e run test:web
+```

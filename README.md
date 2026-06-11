@@ -15,6 +15,8 @@ scientifically accurate CVD models (Viénot 1999, Brettel 1997, Machado 2009)
 to live pages and audits WCAG contrast in the simulated color space, helping
 designers and developers see their work the way color-blind users do.
 
+📖 [Read the validation write-up](docs/validation-en.md) — how the simulation was built and proven correct, pixel by pixel.
+
 ## Monorepo layout
 
 ```

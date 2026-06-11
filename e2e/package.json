@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "test:filter": "node chrome-filter.test.mjs",
-    "test:extension": "playwright test extension.spec.mjs"
+    "test:extension": "playwright test extension.spec.mjs",
+    "test:web": "playwright test web.spec.mjs"
   },
   "devDependencies": {
     "@dichroma/core": "workspace:*",
