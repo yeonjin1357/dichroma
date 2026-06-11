@@ -1,5 +1,7 @@
 # dichroma
 
+**English** | [한국어](README.ko.md)
+
 dichroma is a Chrome extension and pure-TypeScript color-science library for
 simulating color-vision deficiencies and checking contrast. It applies
 scientifically accurate CVD models (Viénot 1999, Brettel 1997, Machado 2009)

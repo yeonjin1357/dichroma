@@ -32,7 +32,7 @@ export default defineConfig({
     // The description resolves from public/_locales/{en,ko}/messages.json
     // (en is the default). See store-assets/listing-en.md for the optional
     // longer store title.
-    name: 'dichroma',
+    name: 'dichroma — color vision simulator & audit',
     description: '__MSG_extDescription__',
     default_locale: 'en',
     // WXT's icon discovery (public/icon/{size}.png) populates manifest.icons
