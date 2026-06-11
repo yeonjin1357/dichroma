@@ -2,6 +2,13 @@
 
 **English** | [한국어](README.ko.md)
 
+<img width="1280" height="800" alt="01-simulation-before-after" src="https://github.com/user-attachments/assets/f78e077e-0bf5-45fa-9e84-e6a9f1d46a27" />
+<img width="1280" height="800" alt="03-audit-panel" src="https://github.com/user-attachments/assets/d5dfa3fc-1bc8-4efd-ba5d-f19e52d4626a" />
+<img width="1280" height="800" alt="02-popup" src="https://github.com/user-attachments/assets/98a39dc3-77bf-429b-b2ee-9bceb8b52bee" />
+<img width="1280" height="800" alt="04-preview-card" src="https://github.com/user-attachments/assets/dfe095d4-d65e-441d-a92b-5560ad3412b6" />
+
+
+
 dichroma is a Chrome extension and pure-TypeScript color-science library for
 simulating color-vision deficiencies and checking contrast. It applies
 scientifically accurate CVD models (Viénot 1999, Brettel 1997, Machado 2009)
